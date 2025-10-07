@@ -1,6 +1,12 @@
 #!/bin/sh
+set -e
 
-# Run Prisma migrations before starting the NestJS server
+echo "Waiting for Postgres to be ready..."
+until pg_isready -h postgres -p 5432 -U postgres; do
+  echo "Postgres is unavailable - sleeping"
+  sleep 2
+done
+
 echo "Running Prisma migrations..."
 npx prisma migrate deploy
 

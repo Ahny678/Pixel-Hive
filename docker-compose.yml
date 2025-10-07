@@ -1,4 +1,5 @@
 version: "3.8"
+
 services:
   postgres:
     image: postgres:15
@@ -9,9 +10,13 @@ services:
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: pixel_hive
     ports:
-      - "5433:5432"
+      - "5433:5432" # host port 5433 -> container 5432
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      retries: 10
 
   backend:
     build: ./backend
@@ -19,17 +24,15 @@ services:
     restart: always
     ports:
       - "3000:3000"
-    environment:
-      DB_HOST: postgres
-      DB_PORT: 5432
-      DB_USER: postgres
-      DB_PASS: postgres
-      DB_NAME: pixel_hive
+    env_file:
+      - ./backend/.env # Load your .env for DATABASE_URL and JWT_SECRET
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
     volumes:
       - ./backend:/app
       - /app/node_modules
+    entrypoint: ["./entrypoint.sh"] # your existing script
 
 volumes:
   postgres_data:
