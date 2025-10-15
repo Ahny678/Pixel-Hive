@@ -10,6 +10,22 @@ model User {
   id        Int      @id @default(autoincrement())
   email     String   @unique
   password  String
+  
+  pdfJobs   PdfJob[]  
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
+model PdfJob {
+  id          Int       @id @default(autoincrement())
+  userId      Int
+  type        String    // "generate" | "merge"
+  inputData   Json
+  outputUrl   String?
+  status      String    @default("pending") // pending | processing | completed | failed
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  errorMsg    String?
+
+  user        User      @relation(fields: [userId], references: [id])
+}
+
