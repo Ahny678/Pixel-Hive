@@ -7,4 +7,4 @@ import { EmailModule } from 'src/email/email.module';
   providers: [QueueService],
   exports: [QueueService],
 })
-export class QueueModule {} // ✅ must export this
+export class QueueModule {}

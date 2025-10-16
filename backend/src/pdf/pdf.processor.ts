@@ -3,7 +3,8 @@ import { Job } from 'bullmq';
 
 import * as fs from 'fs';
 import * as path from 'path';
-import PDFDocument from 'pdfkit';
+import * as PDFDocument from 'pdfkit';
+
 import sharp from 'sharp';
 import { EmailService } from 'src/email/email.service';
 import { PrismaService } from 'src/prisma/prisma.service';

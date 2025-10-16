@@ -19,11 +19,6 @@ export class QueueService implements OnModuleDestroy {
     });
   }
 
-  /**
-   * Add a new job to the queue.
-   * @param name The job name (e.g., 'pdf_generate', 'pdf_merge')
-   * @param data Arbitrary payload passed to the processor
-   */
   async addJob(name: string, data: Record<string, any>) {
     try {
       await this.queue.add(name, data);
@@ -34,9 +29,6 @@ export class QueueService implements OnModuleDestroy {
     }
   }
 
-  /**
-   * Graceful shutdown of Redis connection
-   */
   async onModuleDestroy() {
     await this.queue.close();
     await this.connection.quit();
