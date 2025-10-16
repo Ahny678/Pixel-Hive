@@ -1,51 +1,44 @@
-import { Injectable } from '@nestjs/common';
-import { Queue, Worker, Job } from 'bullmq';
+import { Injectable, OnModuleDestroy } from '@nestjs/common';
+import { Queue } from 'bullmq';
 import IORedis from 'ioredis';
-import { EmailService } from 'src/email/email.service';
 
 @Injectable()
-export class QueueService {
-  private connection: IORedis;
-  private myQueue: Queue;
+export class QueueService implements OnModuleDestroy {
+  private readonly connection: IORedis;
+  private readonly queue: Queue;
 
-  constructor(private readonly emailService: EmailService) {
-    // ✅ Correct instantiation
+  constructor() {
     this.connection = new IORedis({
-      host: 'localhost',
-      port: 6379,
-      maxRetriesPerRequest: null, // ✅ Required by BullMQ
+      host: process.env.REDIS_HOST || 'localhost',
+      port: Number(process.env.REDIS_PORT) || 6379,
+      maxRetriesPerRequest: null, // Required for BullMQ with ioredis v5+
     });
 
-    this.myQueue = new Queue('jobs', { connection: this.connection });
-
-    // ✅ Explicitly type the job
-    new Worker(
-      'jobs',
-      async (job: Job<{ email: string }>) => this.processJob(job),
-      { connection: this.connection },
-    );
+    this.queue = new Queue('jobs', {
+      connection: this.connection,
+    });
   }
 
-  async addJob(name: string, data: any) {
-    await this.myQueue.add(name, data);
-  }
-
-  private async processJob(job: Job<{ email: string }>) {
+  /**
+   * Add a new job to the queue.
+   * @param name The job name (e.g., 'pdf_generate', 'pdf_merge')
+   * @param data Arbitrary payload passed to the processor
+   */
+  async addJob(name: string, data: Record<string, any>) {
     try {
-      console.log('Processing job:', job.name);
-
-      await this.emailService.sendJobStatusEmail(
-        job.data.email,
-        job.name,
-        'success',
-      );
+      await this.queue.add(name, data);
+      console.log(`[QueueService] Added job "${name}"`, data);
     } catch (err) {
-      await this.emailService.sendJobStatusEmail(
-        job.data.email,
-        job.name,
-        'failed',
-        (err as Error).message,
-      );
+      console.error('[QueueService] Failed to add job:', err);
+      throw err;
     }
+  }
+
+  /**
+   * Graceful shutdown of Redis connection
+   */
+  async onModuleDestroy() {
+    await this.queue.close();
+    await this.connection.quit();
   }
 }

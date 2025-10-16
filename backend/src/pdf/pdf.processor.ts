@@ -63,6 +63,8 @@ export class PdfProcessor extends WorkerHost {
         where: { id: jobId },
         data: { status: 'completed', outputUrl: outputPath },
       });
+      console.log('pdfJob.user:', pdfJob.user);
+      console.log('pdfJob.user.email:', pdfJob.user?.email);
 
       await this.emailService.sendJobStatusEmail(
         pdfJob.user.email,
