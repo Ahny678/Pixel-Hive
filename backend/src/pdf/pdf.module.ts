@@ -6,6 +6,7 @@ import { PdfProcessor } from './pdf.processor';
 import { QueueService } from 'src/queue/queue.service';
 import { EmailService } from 'src/email/email.service';
 import { BullModule } from '@nestjs/bullmq';
+import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { BullModule } from '@nestjs/bullmq';
     PdfProcessor,
     QueueService,
     EmailService,
+    CloudinaryService,
   ],
   controllers: [PdfController],
 })

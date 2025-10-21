@@ -6,12 +6,15 @@ import {
   Param,
   UseGuards,
   Req,
+  UseInterceptors,
+  UploadedFiles,
 } from '@nestjs/common';
 import { PdfService } from './pdf.service';
 import { CreatePdfDto } from './dtos/create-pdf.dto';
-import { MergeImagesDto } from './dtos/merge-images.dto';
+
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { Request } from 'express';
+import { FilesInterceptor } from '@nestjs/platform-express';
 
 @Controller('pdf')
 export class PdfController {
@@ -28,11 +31,16 @@ export class PdfController {
 
   @UseGuards(JwtAuthGuard)
   @Post('merge')
-  merge(
+  @UseInterceptors(FilesInterceptor('images', 10)) // up to 10 images
+  async merge(
     @Req() req: Request & { user: { userId: number; email: string } },
-    @Body() dto: MergeImagesDto,
+    @UploadedFiles() files: Express.Multer.File[],
   ) {
-    return this.pdfService.mergeImages(req.user.userId, { ...dto });
+    if (!files || files.length === 0) {
+      throw new Error('No images uploaded');
+    }
+
+    return this.pdfService.mergeImages(req.user.userId, req.user.email, files);
   }
 
   @UseGuards(JwtAuthGuard)

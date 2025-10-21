@@ -1,13 +1,13 @@
 import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { Job } from 'bullmq';
-
 import * as fs from 'fs';
 import * as path from 'path';
 import * as PDFDocument from 'pdfkit';
-
-import sharp from 'sharp';
+import * as sharp from 'sharp';
+import * as puppeteer from 'puppeteer';
 import { EmailService } from 'src/email/email.service';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
 
 interface PdfJobData {
   jobId: number;
@@ -24,6 +24,7 @@ export class PdfProcessor extends WorkerHost {
   constructor(
     private readonly prisma: PrismaService,
     private readonly emailService: EmailService,
+    private readonly cloudinaryService: CloudinaryService,
   ) {
     super();
   }
@@ -43,14 +44,14 @@ export class PdfProcessor extends WorkerHost {
       data: { status: 'processing' },
     });
 
+    const outputDir = path.join(__dirname, '../../../storage');
+    fs.mkdirSync(outputDir, { recursive: true });
+
+    const outputPath = path.join(outputDir, `pdf_${jobId}.pdf`);
+    const inputData = pdfJob.inputData as PdfJobInputData;
+
     try {
-      const outputDir = path.join(__dirname, '../../../storage');
-      fs.mkdirSync(outputDir, { recursive: true });
-
-      const outputPath = path.join(outputDir, `pdf_${jobId}.pdf`);
-
-      const inputData = pdfJob.inputData as PdfJobInputData;
-
+      // Generate or merge PDF
       if (pdfJob.type === 'generate') {
         await this.generatePdfFromTextOrHtml(inputData, outputPath);
       } else if (pdfJob.type === 'merge') {
@@ -60,18 +61,27 @@ export class PdfProcessor extends WorkerHost {
         await this.mergeImagesIntoPdf(inputData.images, outputPath);
       }
 
+      // ✅ Upload to Cloudinary (resource_type: 'raw' for PDFs)
+      const uploadResult = await this.cloudinaryService.uploadFile(
+        outputPath,
+        'pdfs',
+        'raw',
+      );
+
+      const publicUrl = uploadResult.secure_url;
+
+      // ✅ Update DB with Cloudinary URL
       await this.prisma.pdfJob.update({
         where: { id: jobId },
-        data: { status: 'completed', outputUrl: outputPath },
+        data: { status: 'completed', outputUrl: publicUrl },
       });
-      console.log('pdfJob.user:', pdfJob.user);
-      console.log('pdfJob.user.email:', pdfJob.user?.email);
 
+      // ✅ Send email with public URL
       await this.emailService.sendJobStatusEmail(
         pdfJob.user.email,
         'PDF Processing',
         'success',
-        `Download your file at ${outputPath}`,
+        `Download your file <a href="${publicUrl}">${publicUrl}</a>`,
       );
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : String(err);
@@ -90,18 +100,41 @@ export class PdfProcessor extends WorkerHost {
     }
   }
 
+  // 🧾 Generate PDF from text or HTML
   private async generatePdfFromTextOrHtml(
     data: PdfJobInputData,
     outputPath: string,
   ): Promise<void> {
+    // ✅ If HTML is provided, use Puppeteer for full rendering
+    if (data.html && data.html.trim().length > 0) {
+      const browser = await puppeteer.launch({
+        headless: true,
+        args: ['--no-sandbox', '--disable-setuid-sandbox'], // important for Docker
+      });
+
+      const page = await browser.newPage();
+
+      // Set content and wait for resources (CSS/fonts)
+      await page.setContent(data.html, { waitUntil: 'networkidle0' });
+
+      // Export to PDF (A4 by default)
+      await page.pdf({
+        path: outputPath,
+        format: 'A4',
+        printBackground: true,
+        margin: { top: '20mm', right: '15mm', bottom: '20mm', left: '15mm' },
+      });
+
+      await browser.close();
+      return;
+    }
+
+    // ✅ Otherwise, fallback to PDFKit for plain text
     const doc = new PDFDocument();
     const stream = fs.createWriteStream(outputPath);
-
     doc.pipe(stream);
 
-    if (data.text) doc.text(data.text);
-    if (data.html) doc.text(data.html.replace(/<[^>]*>/g, '')); // simple fallback
-
+    doc.fontSize(12).text(data.text || 'No content provided.');
     doc.end();
 
     await new Promise<void>((resolve, reject) => {
@@ -110,6 +143,7 @@ export class PdfProcessor extends WorkerHost {
     });
   }
 
+  // 🖼️ Merge multiple images into a single PDF
   private async mergeImagesIntoPdf(
     images: string[],
     outputPath: string,
