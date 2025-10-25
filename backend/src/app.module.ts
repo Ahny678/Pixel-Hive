@@ -5,9 +5,12 @@ import { AuthModule } from './auth/auth.module';
 import { EmailModule } from './email/email.module';
 import { QueueModule } from './queue/queue.module';
 import { PdfModule } from './pdf/pdf.module';
+import { CloudinaryModule } from './cloudinary/cloudinary.module';
+import { VideoModule } from './video/video.module';
 
 @Module({
   imports: [
+    CloudinaryModule,
     BullModule.forRoot({
       connection: {
         host: process.env.REDIS_HOST || 'localhost',
@@ -15,9 +18,14 @@ import { PdfModule } from './pdf/pdf.module';
       },
     }),
 
-    // 👇 THEN register queues that use that connection
+    // 🧾 PDF processing queue
     BullModule.registerQueue({
       name: 'jobs',
+    }),
+
+    // 🎥 Video processing queue
+    BullModule.registerQueue({
+      name: 'video_jobs',
     }),
 
     PrismaModule,
@@ -25,6 +33,8 @@ import { PdfModule } from './pdf/pdf.module';
     EmailModule,
     QueueModule,
     PdfModule,
+    CloudinaryModule,
+    VideoModule,
   ],
 })
 export class AppModule {}

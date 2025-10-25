@@ -12,6 +12,7 @@ model User {
   password  String
   
   pdfJobs   PdfJob[]  
+  videojob  VideoJob[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -28,4 +29,19 @@ model PdfJob {
 
   user        User      @relation(fields: [userId], references: [id])
 }
+
+model VideoJob {
+  id          Int       @id @default(autoincrement())
+  userId      Int
+  videoUrl    String
+  thumbnails  Json?
+  timestamps  Json?     // store array of timestamps used
+  status      String    @default("pending") // pending | processing | completed | failed
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  errorMsg    String?
+
+  user        User      @relation(fields: [userId], references: [id])
+}
+
 
