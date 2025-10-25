@@ -4,5 +4,5 @@ export class UploadVideoDto {
   @IsOptional()
   @IsArray()
   @IsNumber({}, { each: true })
-  timestamps?: number[]; // e.g. [1, 5, 10] seconds
+  timestamps?: number[];
 }

@@ -12,7 +12,6 @@ export class VideoProcessor extends WorkerHost {
     private readonly cloudinary: CloudinaryService,
   ) {
     super();
-    console.log('[VideoProcessor] Worker initialized!');
   }
 
   async process(job: Job<{ jobId: string }>): Promise<void> {
