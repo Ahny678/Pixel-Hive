@@ -21,7 +21,7 @@ export class PdfService {
       },
     });
 
-    await this.queueService.addJob('pdf_generate', { jobId: job.id });
+    await this.queueService.addJob('jobs', { jobId: job.id });
     return { message: 'PDF generation job queued', jobId: job.id };
   }
 
@@ -49,7 +49,7 @@ export class PdfService {
       },
     });
 
-    await this.queueService.addJob('pdf_merge', { jobId: job.id });
+    await this.queueService.addJob('jobs', { jobId: job.id });
 
     return { message: 'PDF merge job queued', jobId: job.id };
   }

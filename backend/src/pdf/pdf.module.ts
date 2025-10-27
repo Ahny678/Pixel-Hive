@@ -11,7 +11,7 @@ import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
 @Module({
   imports: [
     BullModule.registerQueue({
-      name: 'jobs', // must match @Processor('jobs')
+      name: 'jobs',
     }),
   ],
   providers: [
