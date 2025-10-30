@@ -7,7 +7,6 @@ export class UploadVideoDto {
   @Type(() => Number)
   @Transform(({ value }) => {
     if (typeof value === 'string') {
-      // Handle "1,3,5,10" or "[1,3,5,10]" from Swagger
       try {
         const parsed = JSON.parse(value);
         if (Array.isArray(parsed)) return parsed.map(Number);

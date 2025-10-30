@@ -7,6 +7,7 @@ import { QueueModule } from './queue/queue.module';
 import { PdfModule } from './pdf/pdf.module';
 import { CloudinaryModule } from './cloudinary/cloudinary.module';
 import { VideoModule } from './video/video.module';
+import { QrModule } from './qr/qr.module';
 
 @Module({
   imports: [
@@ -35,6 +36,7 @@ import { VideoModule } from './video/video.module';
     PdfModule,
     CloudinaryModule,
     VideoModule,
+    QrModule,
   ],
 })
 export class AppModule {}
