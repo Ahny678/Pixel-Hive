@@ -19,14 +19,19 @@ import { QrModule } from './qr/qr.module';
       },
     }),
 
-    // 🧾 PDF processing queue
+    //  PDF processing queue
     BullModule.registerQueue({
       name: 'jobs',
     }),
 
-    // 🎥 Video processing queue
+    //  Video processing queue
     BullModule.registerQueue({
       name: 'video_jobs',
+    }),
+
+    //  QR processing queue
+    BullModule.registerQueue({
+      name: 'qr-jobs',
     }),
 
     PrismaModule,

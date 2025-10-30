@@ -1,7 +1,6 @@
 // src/pdf/pdf-example-data.ts
 
 export const pdfTextExample = `
-\`\`\`
 Report Title: Q3 Financial Summary
 
 This document provides an overview of the financial performance for the third quarter.
@@ -12,11 +11,9 @@ Key highlights include:
 
 Generated on: 2025-10-27
 Prepared by: Finance Department
-\`\`\`
 `;
 
 export const pdfHtmlExample = `
-\`\`\`html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -66,5 +63,4 @@ export const pdfHtmlExample = `
   </div>
 </body>
 </html>
-\`\`\`
 `;

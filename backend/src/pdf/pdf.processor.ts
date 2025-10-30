@@ -61,7 +61,7 @@ export class PdfProcessor extends WorkerHost {
         await this.mergeImagesIntoPdf(inputData.images, outputPath);
       }
 
-      // ✅ Upload to Cloudinary (resource_type: 'raw' for PDFs)
+      // Upload to Cloudinary
       const uploadResult = await this.cloudinaryService.uploadFile(
         outputPath,
         'pdfs',
@@ -70,13 +70,13 @@ export class PdfProcessor extends WorkerHost {
 
       const publicUrl = uploadResult.secure_url;
 
-      // ✅ Update DB with Cloudinary URL
+      //  Update DB with Cloudinary URL
       await this.prisma.pdfJob.update({
         where: { id: jobId },
         data: { status: 'completed', outputUrl: publicUrl },
       });
 
-      // ✅ Send email with public URL
+      //  Send email with public URL
       await this.emailService.sendJobStatusEmail(
         pdfJob.user.email,
         'PDF Processing',
@@ -100,16 +100,16 @@ export class PdfProcessor extends WorkerHost {
     }
   }
 
-  // 🧾 Generate PDF from text or HTML
+  //  Generate PDF from text or HTML
   private async generatePdfFromTextOrHtml(
     data: PdfJobInputData,
     outputPath: string,
   ): Promise<void> {
-    // ✅ If HTML is provided, use Puppeteer for full rendering
+    //  If HTML is provided, use Puppeteer for full rendering
     if (data.html && data.html.trim().length > 0) {
       const browser = await puppeteer.launch({
         headless: true,
-        args: ['--no-sandbox', '--disable-setuid-sandbox'], // important for Docker
+        args: ['--no-sandbox', '--disable-setuid-sandbox'],
       });
 
       const page = await browser.newPage();
@@ -143,7 +143,7 @@ export class PdfProcessor extends WorkerHost {
     });
   }
 
-  // 🖼️ Merge multiple images into a single PDF
+  //  Merge multiple images into a single PDF
   private async mergeImagesIntoPdf(
     images: string[],
     outputPath: string,

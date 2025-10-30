@@ -8,7 +8,6 @@ import * as QRCode from 'qrcode';
 
 import { Jimp } from 'jimp';
 
-// import QrCodeReader from 'qrcode-reader';
 const QrCodeReader = require('qrcode-reader');
 
 // 🧩 Define strict job types
@@ -55,7 +54,7 @@ export class QrProcessor extends WorkerHost {
         throw new Error(`Unknown QR job type: ${String(type)}`);
       }
 
-      // ✅ Email success
+      // Email success
       if (userEmail) {
         const message =
           type === 'generate'
@@ -97,7 +96,7 @@ export class QrProcessor extends WorkerHost {
     }
   }
 
-  // 🧩 Generate QR Code
+  //  Generate QR Code
   private async handleGenerate(
     job: Job<GenerateQrJob>,
   ): Promise<{ url: string }> {

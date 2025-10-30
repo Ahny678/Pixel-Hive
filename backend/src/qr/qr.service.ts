@@ -16,7 +16,7 @@ export class QrService {
   async decodeQr(filePath: string, userEmail?: string) {
     await this.queueService.addJob('qr-jobs', {
       type: 'decode',
-      filePath, // ✅ matches DecodeQrJob
+      filePath,
       userEmail,
     });
     return { message: 'QR decoding started' };
