@@ -31,11 +31,33 @@ export class QueueService implements OnModuleDestroy {
   /**
    * Add a job to a specific queue.
    */
+  // async addJob(queueName: string, data: Record<string, any>) {
+  //   try {
+  //     const queue = this.getQueue(queueName);
+  //     await queue.add(queueName, data);
+  //     console.log(`[QueueService] Added job to "${queueName}"`, data);
+  //   } catch (err) {
+  //     console.error(`[QueueService] Failed to add job to "${queueName}":`, err);
+  //     throw err;
+  //   }
+  // }
+  /**
+   * Add a job to a specific queue with retry settings.
+   */
   async addJob(queueName: string, data: Record<string, any>) {
     try {
       const queue = this.getQueue(queueName);
-      await queue.add(queueName, data);
-      console.log(`[QueueService] Added job to "${queueName}"`, data);
+      await queue.add(queueName, data, {
+        attempts: 3, // Retry up to 3 times
+        backoff: {
+          type: 'exponential',
+          delay: 1000, // Delay in ms (e.g. 1 second)
+        },
+      });
+      console.log(
+        `[QueueService] Added job to "${queueName}" with retry settings`,
+        data,
+      );
     } catch (err) {
       console.error(`[QueueService] Failed to add job to "${queueName}":`, err);
       throw err;
