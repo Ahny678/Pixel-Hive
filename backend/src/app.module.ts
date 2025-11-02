@@ -8,6 +8,7 @@ import { PdfModule } from './pdf/pdf.module';
 import { CloudinaryModule } from './cloudinary/cloudinary.module';
 import { VideoModule } from './video/video.module';
 import { QrModule } from './qr/qr.module';
+import { FileCleanupModule } from './file-cleanup/file-cleanup.module';
 
 @Module({
   imports: [
@@ -42,6 +43,7 @@ import { QrModule } from './qr/qr.module';
     CloudinaryModule,
     VideoModule,
     QrModule,
+    FileCleanupModule,
   ],
 })
 export class AppModule {}

@@ -7,6 +7,7 @@ import { EmailService } from '../email/email.service';
 import * as QRCode from 'qrcode';
 
 import { Jimp } from 'jimp';
+import { FileCleanupService } from 'src/file-cleanup/file-cleanup.service';
 
 const QrCodeReader = require('qrcode-reader');
 
@@ -36,6 +37,7 @@ export class QrProcessor extends WorkerHost {
   constructor(
     private readonly cloudinaryService: CloudinaryService,
     private readonly emailService: EmailService,
+    private readonly fileCleanupService: FileCleanupService,
   ) {
     super();
   }
@@ -124,23 +126,27 @@ export class QrProcessor extends WorkerHost {
     const { filePath } = job.data;
     if (!filePath) throw new Error('Missing "filePath" for QR decoding.');
 
-    // ✅ Works with older Jimp versions
-    const image = await Jimp.read(filePath);
+    try {
+      const image = await Jimp.read(filePath);
 
-    const qr = new QrCodeReader();
+      const qr = new QrCodeReader();
 
-    const decoded: string = await new Promise<string>((resolve, reject) => {
-      qr.callback = (
-        err: Error | null,
-        value: { result?: string } | undefined,
-      ): void => {
-        if (err) return reject(new Error(err.message));
-        if (!value?.result) return reject(new Error('No QR code detected.'));
-        resolve(value.result);
-      };
-      qr.decode(image.bitmap);
-    });
+      const decoded: string = await new Promise<string>((resolve, reject) => {
+        qr.callback = (
+          err: Error | null,
+          value: { result?: string } | undefined,
+        ): void => {
+          if (err) return reject(new Error(err.message));
+          if (!value?.result) return reject(new Error('No QR code detected.'));
+          resolve(value.result);
+        };
+        qr.decode(image.bitmap);
+      });
 
-    return { decoded };
+      return { decoded };
+    } finally {
+      //  Clean up the temp file
+      await this.fileCleanupService.deleteFiles([filePath]);
+    }
   }
 }

@@ -8,6 +8,7 @@ import * as puppeteer from 'puppeteer';
 import { EmailService } from 'src/email/email.service';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
+import { FileCleanupService } from 'src/file-cleanup/file-cleanup.service';
 
 interface PdfJobData {
   jobId: number;
@@ -25,6 +26,7 @@ export class PdfProcessor extends WorkerHost {
     private readonly prisma: PrismaService,
     private readonly emailService: EmailService,
     private readonly cloudinaryService: CloudinaryService,
+    private readonly fileCleanupService: FileCleanupService,
   ) {
     super();
   }
@@ -97,6 +99,13 @@ export class PdfProcessor extends WorkerHost {
         'failed',
         errorMessage,
       );
+    }
+    // After successful Cloudinary upload:
+    await this.fileCleanupService.deleteFiles([outputPath]);
+
+    // If merged images were used:
+    if (inputData.images) {
+      await this.fileCleanupService.deleteFiles(inputData.images);
     }
   }
 

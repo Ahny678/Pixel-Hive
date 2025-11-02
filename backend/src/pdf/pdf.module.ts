@@ -7,6 +7,7 @@ import { QueueService } from 'src/queue/queue.service';
 import { EmailService } from 'src/email/email.service';
 import { BullModule } from '@nestjs/bullmq';
 import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
+import { FileCleanupService } from 'src/file-cleanup/file-cleanup.service';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
     QueueService,
     EmailService,
     CloudinaryService,
+    FileCleanupService,
   ],
   controllers: [PdfController],
 })
