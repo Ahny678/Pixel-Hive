@@ -8,14 +8,15 @@ export class QueueService implements OnModuleDestroy {
   private readonly queues: Map<string, Queue>;
 
   constructor() {
-    // this.connection = new IORedis({
-    //   host: process.env.REDIS_HOST || 'localhost',
-    //   port: Number(process.env.REDIS_PORT) || 6379,
-    //   maxRetriesPerRequest: null,
-    // });
-    this.connection = new IORedis(
-      process.env.REDIS_URL || 'redis://127.0.0.1:6379',
-    );
+    this.connection = new IORedis({
+      host: process.env.REDIS_HOST || 'localhost',
+      port: Number(process.env.REDIS_PORT) || 6379,
+      password: process.env.REDIS_PASSWORD || ' ',
+      maxRetriesPerRequest: null,
+    });
+    // this.connection = new IORedis(
+    //   process.env.REDIS_URL || 'redis://127.0.0.1:6379',
+    // );
 
     this.queues = new Map();
   }
