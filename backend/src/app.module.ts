@@ -9,6 +9,7 @@ import { CloudinaryModule } from './cloudinary/cloudinary.module';
 import { VideoModule } from './video/video.module';
 import { QrModule } from './qr/qr.module';
 import { FileCleanupModule } from './file-cleanup/file-cleanup.module';
+import { WatermarkModule } from './watermark/watermark.module';
 
 @Module({
   imports: [
@@ -44,6 +45,7 @@ import { FileCleanupModule } from './file-cleanup/file-cleanup.module';
     VideoModule,
     QrModule,
     FileCleanupModule,
+    WatermarkModule,
   ],
 })
 export class AppModule {}

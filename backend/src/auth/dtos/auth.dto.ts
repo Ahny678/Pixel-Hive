@@ -20,11 +20,11 @@ export class SignupDto {
 }
 
 export class LoginDto {
-  @ApiProperty({ example: 'user@example.com' })
+  @ApiProperty({ example: 'nebotiffany@gmail.com' })
   @IsEmail({}, { message: 'Invalid email format' })
   email: string;
 
-  @ApiProperty({ example: 'password123' })
+  @ApiProperty({ example: 'password' })
   @IsString()
   password: string;
 }

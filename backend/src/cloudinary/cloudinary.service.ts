@@ -129,4 +129,20 @@ export class CloudinaryService {
       ],
     });
   }
+  buildUrl(
+    publicId: string,
+    options: {
+      transformations?: string[];
+      resourceType?: 'image' | 'video' | 'raw';
+      format?: string;
+    } = {},
+  ): string {
+    const { transformations = [], resourceType = 'image', format } = options;
+    const transformationStr =
+      transformations.length > 0 ? transformations.join('/') + '/' : '';
+    const formatStr = format ? `.${format}` : '';
+    const cloudName = cloudinary.config().cloud_name;
+    if (!cloudName) throw new Error('Cloudinary not configured');
+    return `https://res.cloudinary.com/${cloudName}/${resourceType}/upload/${transformationStr}${publicId}${formatStr}`;
+  }
 }

@@ -13,6 +13,7 @@ model User {
   
   pdfJobs   PdfJob[]  
   videojob  VideoJob[]
+  WatermarkJob  WatermarkJob[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -43,5 +44,49 @@ model VideoJob {
 
   user        User      @relation(fields: [userId], references: [id])
 }
+model WatermarkJob {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  status    JobStatus @default(pending)
+  errorMsg  String?
+  
+  // Input files
+  inputFileUrl String
+  inputFileType FileType // IMAGE, VIDEO, PDF
+  
+  // Watermark configuration
+  watermarkType WatermarkType // TEXT, IMAGE
+  textContent   String?       // For text watermarks
+  watermarkImageUrl String?   // For image watermarks
+  opacity       Float?        // 0.0 - 1.0
+  position      String?       // top-left, top-right, center, bottom-left, bottom-right
+  fontSize      Int?          // For text watermarks
+  
+  // Output
+  outputFileUrl String?
+  
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@map("watermark_jobs")
+}
 
+enum JobStatus {
+  pending
+  processing
+  completed
+  failed
+}
+
+enum FileType {
+  IMAGE
+  VIDEO
+  PDF
+}
+
+enum WatermarkType {
+  TEXT
+  IMAGE
+}
 
