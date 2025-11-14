@@ -32,4 +32,16 @@ export class FileCleanupService {
       this.logger.error(`Failed to delete folder ${folderPath}`, err);
     }
   }
+  getLocalPathFromUrl(url: string): string {
+    try {
+      const filename = url.split('/').pop();
+      if (!filename) throw new Error('Invalid inputFileUrl: missing filename');
+
+      // Change this to your actual local watermark folder path
+      return `backend/uploads/watermark/${filename}`;
+    } catch (err) {
+      console.error('[getLocalPathFromUrl] Failed:', err);
+      throw err;
+    }
+  }
 }

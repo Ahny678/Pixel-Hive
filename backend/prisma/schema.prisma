@@ -55,6 +55,7 @@ model WatermarkJob {
   // Input files
   inputFileUrl String
   inputFileType FileType // IMAGE, VIDEO, PDF
+  inputLocalPath String?
   
   // Watermark configuration
   watermarkType WatermarkType // TEXT, IMAGE

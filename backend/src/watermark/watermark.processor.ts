@@ -82,11 +82,23 @@ export class WatermarkProcessor extends WorkerHost {
         `[WatermarkProcessor] File uploaded successfully: ${uploadResult.secure_url}`,
       );
 
-      // ✅ 3. Clean up local temp file
-      await this.fileCleanupService.deleteFiles([localOutputPath]);
-      console.log(
-        `[WatermarkProcessor] Local file cleaned up: ${localOutputPath}`,
-      );
+      // ✅ 3. Clean up local temp file AND input file
+      try {
+        const inputLocalPath = watermarkJob.inputLocalPath;
+        if (inputLocalPath) {
+          await this.fileCleanupService.deleteFiles([
+            localOutputPath,
+            inputLocalPath,
+          ]);
+        }
+
+        console.log(`[WatermarkProcessor] Cleaned up:`, {
+          output: localOutputPath,
+          input: inputLocalPath,
+        });
+      } catch (cleanupErr) {
+        console.error('[WatermarkProcessor] Cleanup failed:', cleanupErr);
+      }
 
       // ✅ 4. Update job record
       await this.prisma.watermarkJob.update({
