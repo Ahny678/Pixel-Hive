@@ -79,11 +79,17 @@ export class PdfProcessor extends WorkerHost {
       });
 
       //  Send email with public URL
-      await this.emailService.sendJobStatusEmail(
+      // await this.emailService.sendJobStatusEmail(
+      //   pdfJob.user.email,
+      //   'PDF Processing',
+      //   'success',
+      //   `Download your file <a href="${publicUrl}">${publicUrl}</a>`,
+      // );
+      await this.emailService.sendPdfJobEmail(
         pdfJob.user.email,
-        'PDF Processing',
         'success',
-        `Download your file <a href="${publicUrl}">${publicUrl}</a>`,
+        publicUrl,
+        `Your PDF has been successfully processed and is ready for download.`,
       );
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : String(err);
@@ -93,10 +99,11 @@ export class PdfProcessor extends WorkerHost {
         data: { status: 'failed', errorMsg: errorMessage },
       });
 
-      await this.emailService.sendJobStatusEmail(
+      await this.emailService.sendPdfJobEmail(
         pdfJob.user.email,
-        'PDF Processing',
         'failed',
+        undefined, // No download URL
+        `PDF processing failed for job #${jobId}`,
         errorMessage,
       );
     }

@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { Job } from 'bullmq';
 import { InternalServerErrorException, Logger } from '@nestjs/common';
@@ -57,17 +59,26 @@ export class QrProcessor extends WorkerHost {
       }
 
       // Email success
-      if (userEmail) {
-        const message =
-          type === 'generate'
-            ? `QR Code: <a href="${result.url ?? '#'}">${result.url ?? 'N/A'}</a>`
-            : `Decoded: ${result.decoded ?? 'N/A'}`;
+      // if (userEmail) {
+      //   const message =
+      //     type === 'generate'
+      //       ? `QR Code: <a href="${result.url ?? '#'}">${result.url ?? 'N/A'}</a>`
+      //       : `Decoded: ${result.decoded ?? 'N/A'}`;
 
-        await this.emailService.sendJobStatusEmail(
+      //   await this.emailService.sendJobStatusEmail(
+      //     userEmail,
+      //     `QR ${type}`,
+      //     'success',
+      //     message,
+      //   );
+      // }
+      if (userEmail) {
+        await this.emailService.sendQrJobEmail(
           userEmail,
-          `QR ${type}`,
+          type,
           'success',
-          message,
+          result,
+          `Your QR code ${type} job has completed successfully.`,
         );
       }
 
@@ -84,10 +95,12 @@ export class QrProcessor extends WorkerHost {
       );
 
       if (job.data.userEmail) {
-        await this.emailService.sendJobStatusEmail(
+        await this.emailService.sendQrJobEmail(
           job.data.userEmail,
-          `QR ${job.data.type}`,
+          job.data.type,
           'failed',
+          undefined, // No result for failed jobs
+          `QR ${job.data.type} job failed.`,
           err.message,
         );
       }

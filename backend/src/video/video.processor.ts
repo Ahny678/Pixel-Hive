@@ -16,87 +16,6 @@ export class VideoProcessor extends WorkerHost {
     super();
   }
 
-  // async process(job: Job<{ jobId: string }>): Promise<void> {
-  //   const numericJobId = Number(job.data.jobId);
-  //   console.log(`[VideoProcessor] Processing job ${numericJobId}...`);
-
-  //   const videoJob = await this.prisma.videoJob.findUnique({
-  //     where: { id: numericJobId },
-  //     include: { user: true },
-  //   });
-  //   if (!videoJob?.user) {
-  //     console.warn(
-  //       `[VideoProcessor] Job ${numericJobId} missing user or record.`,
-  //     );
-  //     return;
-  //   }
-
-  //   await this.prisma.videoJob.update({
-  //     where: { id: numericJobId },
-  //     data: { status: 'processing' },
-  //   });
-
-  //   try {
-  //     const { videoUrl, timestamps } = videoJob;
-  //     if (!videoUrl) throw new Error('Missing videoUrl in job record.');
-
-  //     const videoPublicId = this.extractPublicId(videoUrl);
-  //     const times: number[] =
-  //       Array.isArray(timestamps) && timestamps.length
-  //         ? (timestamps as number[])
-  //         : [1, 3, 5, 10];
-
-  //     console.log(
-  //       `[VideoProcessor] Generating Cloudinary thumbnails for ${videoPublicId}`,
-  //     );
-
-  //     const uploadedUrls: string[] = times.map((t) =>
-  //       this.cloudinary.buildThumbnailUrl(videoPublicId, t),
-  //     );
-
-  //     await this.prisma.videoJob.update({
-  //       where: { id: numericJobId },
-  //       data: { status: 'completed', thumbnails: uploadedUrls },
-  //     });
-
-  //     const detailsMessage =
-  //       uploadedUrls.length > 0
-  //         ? `Your video thumbnails are ready:\n\n${uploadedUrls
-  //             .map((url) => `• ${url}`)
-  //             .join('\n')}`
-  //         : 'Your video thumbnails are ready, but no URLs were returned.';
-
-  //     await this.emailService.sendJobStatusEmail(
-  //       videoJob.user.email,
-  //       'Video Thumbnail Generation',
-  //       'success',
-  //       detailsMessage,
-  //     );
-
-  //     console.log(
-  //       `[VideoProcessor] Job ${numericJobId} completed successfully.`,
-  //     );
-  //   } catch (err) {
-  //     const errorMessage =
-  //       err instanceof Error ? err.message : 'Unknown processing error';
-  //     console.error(
-  //       `[VideoProcessor] Job ${numericJobId} failed:`,
-  //       errorMessage,
-  //     );
-
-  //     await this.prisma.videoJob.update({
-  //       where: { id: numericJobId },
-  //       data: { status: 'failed', errorMsg: errorMessage },
-  //     });
-
-  //     await this.emailService.sendJobStatusEmail(
-  //       videoJob.user.email,
-  //       'Video Thumbnail Generation',
-  //       'failed',
-  //       errorMessage,
-  //     );
-  //   }
-  // }
   async process(job: Job<{ jobId: string }>): Promise<void> {
     const numericJobId = Number(job.data.jobId);
     console.log(`[VideoProcessor] Processing job ${numericJobId}...`);
@@ -143,20 +62,12 @@ export class VideoProcessor extends WorkerHost {
         data: { status: 'completed', thumbnails: uploadedUrls },
       });
 
-      const detailsMessage =
-        uploadedUrls.length > 0
-          ? `Your video thumbnails are ready:\n\n${uploadedUrls
-              .map((url) => `• ${url}`)
-              .join('\n')}`
-          : 'Your video thumbnails are ready, but no URLs were returned.';
-
-      await this.emailService.sendJobStatusEmail(
+      await this.emailService.sendVideoJobEmail(
         videoJob.user.email,
-        'Video Thumbnail Generation',
         'success',
-        detailsMessage,
+        uploadedUrls,
+        `Successfully generated ${uploadedUrls.length} thumbnails from your video.`,
       );
-
       console.log(
         `[VideoProcessor] Job ${numericJobId} completed successfully.`,
       );
@@ -173,10 +84,11 @@ export class VideoProcessor extends WorkerHost {
         data: { status: 'failed', errorMsg: errorMessage },
       });
 
-      await this.emailService.sendJobStatusEmail(
+      await this.emailService.sendVideoJobEmail(
         videoJob.user.email,
-        'Video Thumbnail Generation',
         'failed',
+        undefined, // No thumbnails
+        `Video thumbnail generation failed for job #${numericJobId}`,
         errorMessage,
       );
     } finally {

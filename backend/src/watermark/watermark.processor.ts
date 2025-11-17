@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { Job } from 'bullmq';
 import { PrismaService } from 'src/prisma/prisma.service';
@@ -111,21 +113,16 @@ export class WatermarkProcessor extends WorkerHost {
       });
 
       // ✅ 5. Email user
-      const detailsMessage = `Your watermarked file is ready:
-    
-Input: ${watermarkJob.inputFileUrl}
-Output: ${uploadResult.secure_url}
-
-Watermark type: ${watermarkJob.watermarkType}
-Position: ${watermarkJob.position ?? 'default'}
-Opacity: ${watermarkJob.opacity ?? 0.7}
-Font size: ${watermarkJob.fontSize ?? 24}`;
-
-      await this.emailService.sendJobStatusEmail(
+      await this.emailService.sendWatermarkJobEmail(
         watermarkJob.user.email,
-        'File Watermarking - Completed',
         'success',
-        detailsMessage,
+        watermarkJob.inputFileUrl,
+        uploadResult.secure_url,
+        `Watermark applied successfully with the following settings:
+    - Type: ${watermarkJob.watermarkType}
+    - Position: ${watermarkJob.position}
+    - Opacity: ${watermarkJob.opacity}
+    - Font Size: ${watermarkJob.fontSize}`,
       );
 
       console.log(
@@ -155,24 +152,13 @@ Font size: ${watermarkJob.fontSize ?? 24}`;
         },
       });
 
-      // Send error email
-      const errorDetails = `Error: ${message}
-
-Job Details:
-- Job ID: ${numericJobId}
-- File Type: ${watermarkJob.inputFileType}
-- Watermark Type: ${watermarkJob.watermarkType}
-- Position: ${watermarkJob.position}
-- Opacity: ${watermarkJob.opacity}
-- Font Size: ${watermarkJob.fontSize}
-
-If this error persists, please contact support with the Job ID above.`;
-
-      await this.emailService.sendJobStatusEmail(
+      await this.emailService.sendWatermarkJobEmail(
         watermarkJob.user.email,
-        'File Watermarking - Failed',
         'failed',
-        errorDetails,
+        watermarkJob.inputFileUrl,
+        undefined, // No output URL
+        `Watermark application failed for job #${numericJobId}`,
+        message,
       );
     }
   }
