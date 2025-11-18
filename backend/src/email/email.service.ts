@@ -7,15 +7,61 @@ import * as nodemailer from 'nodemailer';
 export class EmailService {
   private transporter;
 
+  // constructor() {
+  //   this.transporter = nodemailer.createTransport({
+  //     host: process.env.SMTP_HOST,
+  //     port: Number(process.env.SMTP_PORT),
+  //     auth: {
+  //       user: process.env.SMTP_USER,
+  //       pass: process.env.SMTP_PASS,
+  //     },
+  //   });
+  // }
+
+  // async sendEmail(to: string, subject: string, html: string) {
+  //   try {
+  //     const info = await this.transporter.sendMail({
+  //       from: `"Pixel-Hive" <${process.env.SMTP_USER}>`,
+  //       to,
+  //       subject,
+  //       html,
+  //     });
+  //     console.log('Email sent:', info.messageId);
+  //   } catch (err) {
+  //     console.error('Failed to send email', err);
+  //     throw new InternalServerErrorException('Failed to send email');
+  //   }
+  // }
   constructor() {
     this.transporter = nodemailer.createTransport({
       host: process.env.SMTP_HOST,
       port: Number(process.env.SMTP_PORT),
+      secure: Number(process.env.SMTP_PORT) === 465, // true for 465, false for other ports
       auth: {
         user: process.env.SMTP_USER,
         pass: process.env.SMTP_PASS,
       },
+      // Add connection timeout settings
+      connectionTimeout: 30000, // 30 seconds
+      socketTimeout: 30000, // 30 seconds
+      greetingTimeout: 30000, // 30 seconds
+      // For Render.com specific issues
+      tls: {
+        rejectUnauthorized: false, // Might be needed for some SMTP providers
+      },
     });
+
+    // Verify connection on startup
+    this.verifyConnection();
+  }
+
+  private async verifyConnection() {
+    try {
+      await this.transporter.verify();
+      console.log('SMTP connection verified successfully');
+    } catch (error) {
+      console.warn('SMTP connection verification failed:', error.message);
+    }
   }
 
   async sendEmail(to: string, subject: string, html: string) {
@@ -27,12 +73,12 @@ export class EmailService {
         html,
       });
       console.log('Email sent:', info.messageId);
+      return info;
     } catch (err) {
       console.error('Failed to send email', err);
       throw new InternalServerErrorException('Failed to send email');
     }
   }
-
   async sendJobStatusEmail(
     to: string,
     jobType: string,
