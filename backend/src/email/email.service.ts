@@ -1,41 +1,48 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
-import * as nodemailer from 'nodemailer';
+
+import * as SendGrid from '@sendgrid/mail';
 
 @Injectable()
 export class EmailService {
-  private transporter;
-
   constructor() {
-    // this.transporter = nodemailer.createTransport({
-    //   host: process.env.SMTP_HOST,
-    //   port: Number(process.env.SMTP_PORT),
-    //   auth: {
-    //     user: process.env.SMTP_USER,
-    //     pass: process.env.SMTP_PASS,
-    //   },
-    // });
-    this.transporter = nodemailer.createTransport({
-      service: 'gmail', // Use service instead of host/port
-      auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS, // This should be an App Password, not your regular password
-      },
-      connectionTimeout: 30000,
-      socketTimeout: 30000,
-    });
+    const apiKey = process.env.SENDGRID_API_KEY;
+    const from = process.env.SENDGRID_FROM_EMAIL;
+
+    if (!apiKey) {
+      throw new Error('SENDGRID_API_KEY is not set');
+    }
+
+    if (!from) {
+      throw new Error('SENDGRID_FROM_EMAIL is not set');
+    }
+
+    SendGrid.setApiKey(apiKey);
   }
 
   async sendEmail(to: string, subject: string, html: string) {
     try {
-      const info = await this.transporter.sendMail({
-        from: `"Pixel-Hive" <${process.env.SMTP_USER}>`,
+      const from = process.env.SENDGRID_FROM_EMAIL as string;
+
+      const msg: SendGrid.MailDataRequired = {
         to,
+        from,
         subject,
         html,
+      };
+
+      const [response] = await SendGrid.send(msg);
+
+      console.log('Email sent:', {
+        statusCode: response.statusCode,
+        messageId: response.headers['x-message-id'],
       });
-      console.log('Email sent:', info.messageId);
+
+      return {
+        statusCode: response.statusCode,
+        messageId: response.headers['x-message-id'],
+      };
     } catch (err) {
       console.error('Failed to send email', err);
       throw new InternalServerErrorException('Failed to send email');
