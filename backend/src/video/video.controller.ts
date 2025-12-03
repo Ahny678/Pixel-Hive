@@ -67,7 +67,10 @@ export class VideoController {
   })
   @ApiResponse({
     status: 201,
-    description: 'Video uploaded successfully, job queued for processing',
+    description: `{
+  "message": "Video upload successful, processing queued",
+  "jobId": 15
+}`,
     schema: {
       example: {
         message: 'Video upload successful, processing queued',

@@ -32,7 +32,10 @@ export class QrController {
     schema: {
       type: 'object',
       properties: {
-        data: { type: 'string', example: 'Hello, QR World!' },
+        data: {
+          type: 'string',
+          example: 'https://portfolio-site-two-pink.vercel.app/',
+        },
       },
       required: ['data'],
     },

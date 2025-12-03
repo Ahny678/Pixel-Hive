@@ -18,8 +18,10 @@ async function bootstrap() {
   app.useGlobalFilters(new PrismaClientExceptionFilter());
   // Swagger setup
   const config = new DocumentBuilder()
-    .setTitle('PIxelHive API')
-    .setDescription('Pixel Hive offers Media Processing Services')
+    .setTitle('PixelHive API')
+    .setDescription(
+      'Cloud-based media-processing service that provides asynchronous, reliable processing of PDFs, videos, images, and QR codes',
+    )
     .setVersion('1.0')
     .addBearerAuth()
     .build();

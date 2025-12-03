@@ -33,7 +33,13 @@ export class PdfController {
   @UseGuards(JwtAuthGuard)
   @Post('generate')
   @ApiOperation({ summary: 'Generate a PDF from text or HTML' })
-  @ApiResponse({ status: 201, description: 'PDF successfully generated' })
+  @ApiResponse({
+    status: 201,
+    description: `{
+  "message": "PDF generation job queued",
+  "jobId": 44
+}`,
+  })
   @ApiResponse({ status: 400, description: 'Invalid input data' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   generate(
@@ -62,7 +68,10 @@ export class PdfController {
   })
   @ApiResponse({
     status: 201,
-    description: 'Images merged into PDF successfully',
+    description: `{
+  "message": "PDF generation job queued",
+  "jobId": 44
+}`,
   })
   @ApiResponse({ status: 400, description: 'No images uploaded' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
@@ -83,7 +92,7 @@ export class PdfController {
   @ApiParam({ name: 'id', description: 'Job ID', example: 123 })
   @ApiResponse({
     status: 200,
-    description: 'Job status retrieved successfully',
+    description: '{...job details}',
   })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   getStatus(@Param('id') id: string) {
