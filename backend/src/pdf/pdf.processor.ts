@@ -123,8 +123,13 @@ export class PdfProcessor extends WorkerHost {
   ): Promise<void> {
     //  If HTML is provided, use Puppeteer for full rendering
     if (data.html && data.html.trim().length > 0) {
+      // const browser = await puppeteer.launch({
+      //   headless: true,
+      //   args: ['--no-sandbox', '--disable-setuid-sandbox'],
+      // });
       const browser = await puppeteer.launch({
         headless: true,
+        executablePath: puppeteer.executablePath(),
         args: ['--no-sandbox', '--disable-setuid-sandbox'],
       });
 
