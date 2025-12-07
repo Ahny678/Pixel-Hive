@@ -4,7 +4,8 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as PDFDocument from 'pdfkit';
 import * as sharp from 'sharp';
-import * as puppeteer from 'puppeteer';
+// import * as puppeteer from 'puppeteer';
+import * as htmlPdf from 'html-pdf-node';
 import { EmailService } from 'src/email/email.service';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
@@ -29,16 +30,8 @@ export class PdfProcessor extends WorkerHost {
     private readonly fileCleanupService: FileCleanupService,
   ) {
     super();
-    this.logChromePath();
   }
-  private async logChromePath() {
-    try {
-      const path = puppeteer.executablePath();
-      console.log('Puppeteer Chromium path:', path);
-    } catch (err) {
-      console.error('Error finding Puppeteer Chromium path:', err);
-    }
-  }
+
   async process(job: Job<PdfJobData>): Promise<void> {
     const { jobId } = job.data;
 
@@ -125,42 +118,79 @@ export class PdfProcessor extends WorkerHost {
   }
 
   //  Generate PDF from text or HTML
+  // private async generatePdfFromTextOrHtml(
+  //   data: PdfJobInputData,
+  //   outputPath: string,
+  // ): Promise<void> {
+  //   //  If HTML is provided, use Puppeteer for full rendering
+  //   if (data.html && data.html.trim().length > 0) {
+  //     // const browser = await puppeteer.launch({
+  //     //   headless: true,
+  //     //   args: ['--no-sandbox', '--disable-setuid-sandbox'],
+  //     // });
+  //     const chromePath = process.env.CHROME_PATH || puppeteer.executablePath();
+  //     console.log('Launching Chrome at path:', chromePath);
+  //     const browser = await puppeteer.launch({
+  //       headless: true,
+  //       executablePath: process.env.CHROME_PATH || puppeteer.executablePath(),
+  //       args: ['--no-sandbox', '--disable-setuid-sandbox'],
+  //     });
+
+  //     const page = await browser.newPage();
+
+  //     // Set content and wait for resources (CSS/fonts)
+  //     await page.setContent(data.html, { waitUntil: 'networkidle0' });
+
+  //     // Export to PDF (A4 by default)
+  //     await page.pdf({
+  //       path: outputPath,
+  //       format: 'A4',
+  //       printBackground: true,
+  //       margin: { top: '20mm', right: '15mm', bottom: '20mm', left: '15mm' },
+  //     });
+
+  //     await browser.close();
+  //     return;
+  //   }
+
+  //   // ✅ Otherwise, fallback to PDFKit for plain text
+  //   const doc = new PDFDocument();
+  //   const stream = fs.createWriteStream(outputPath);
+  //   doc.pipe(stream);
+
+  //   doc.fontSize(12).text(data.text || 'No content provided.');
+  //   doc.end();
+
+  //   await new Promise<void>((resolve, reject) => {
+  //     stream.on('finish', resolve);
+  //     stream.on('error', reject);
+  //   });
+  // }
+
   private async generatePdfFromTextOrHtml(
     data: PdfJobInputData,
     outputPath: string,
   ): Promise<void> {
-    //  If HTML is provided, use Puppeteer for full rendering
+    // If HTML is provided, use html-pdf-node
     if (data.html && data.html.trim().length > 0) {
-      // const browser = await puppeteer.launch({
-      //   headless: true,
-      //   args: ['--no-sandbox', '--disable-setuid-sandbox'],
-      // });
-      const chromePath = process.env.CHROME_PATH || puppeteer.executablePath();
-      console.log('Launching Chrome at path:', chromePath);
-      const browser = await puppeteer.launch({
-        headless: true,
-        executablePath: process.env.CHROME_PATH || puppeteer.executablePath(),
-        args: ['--no-sandbox', '--disable-setuid-sandbox'],
-      });
-
-      const page = await browser.newPage();
-
-      // Set content and wait for resources (CSS/fonts)
-      await page.setContent(data.html, { waitUntil: 'networkidle0' });
-
-      // Export to PDF (A4 by default)
-      await page.pdf({
-        path: outputPath,
+      const file = { content: data.html };
+      const options = {
         format: 'A4',
+        margin: {
+          top: '20mm',
+          right: '15mm',
+          bottom: '20mm',
+          left: '15mm',
+        },
         printBackground: true,
-        margin: { top: '20mm', right: '15mm', bottom: '20mm', left: '15mm' },
-      });
+      };
 
-      await browser.close();
+      const pdfBuffer = await htmlPdf.generatePdf(file, options);
+      await fs.promises.writeFile(outputPath, pdfBuffer);
       return;
     }
 
-    // ✅ Otherwise, fallback to PDFKit for plain text
+    // Fallback to PDFKit for plain text
     const doc = new PDFDocument();
     const stream = fs.createWriteStream(outputPath);
     doc.pipe(stream);
