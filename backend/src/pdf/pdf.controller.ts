@@ -32,7 +32,7 @@ export class PdfController {
 
   @UseGuards(JwtAuthGuard)
   @Post('generate')
-  @ApiOperation({ summary: 'Generate a PDF from text or HTML' })
+  @ApiOperation({ summary: 'Generate a PDF from text or HTML. Use only ONE' })
   @ApiResponse({
     status: 201,
     description: `{
