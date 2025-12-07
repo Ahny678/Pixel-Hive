@@ -29,8 +29,16 @@ export class PdfProcessor extends WorkerHost {
     private readonly fileCleanupService: FileCleanupService,
   ) {
     super();
+    this.logChromePath();
   }
-
+  private async logChromePath() {
+    try {
+      const path = puppeteer.executablePath();
+      console.log('Puppeteer Chromium path:', path);
+    } catch (err) {
+      console.error('Error finding Puppeteer Chromium path:', err);
+    }
+  }
   async process(job: Job<PdfJobData>): Promise<void> {
     const { jobId } = job.data;
 
@@ -127,9 +135,11 @@ export class PdfProcessor extends WorkerHost {
       //   headless: true,
       //   args: ['--no-sandbox', '--disable-setuid-sandbox'],
       // });
+      const chromePath = process.env.CHROME_PATH || puppeteer.executablePath();
+      console.log('Launching Chrome at path:', chromePath);
       const browser = await puppeteer.launch({
         headless: true,
-        executablePath: puppeteer.executablePath(),
+        executablePath: process.env.CHROME_PATH || puppeteer.executablePath(),
         args: ['--no-sandbox', '--disable-setuid-sandbox'],
       });
 
